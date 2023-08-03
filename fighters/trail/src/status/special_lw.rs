@@ -1,18 +1,22 @@
 use super::*;
 
-unsafe fn trail_special_lw_main_loop(fighter: &mut L2CFighterCommon) -> L2CValue {
+unsafe extern "C" fn trail_special_lw_main_loop(fighter: &mut L2CFighterCommon) -> L2CValue {
     if fighter.is_situation(*SITUATION_KIND_AIR) {
-        let attack_air_main_common = fighter.status_AttackAir_Main_common();
-        if attack_air_main_common {
+        // Taken from vanilla down air
+        if fighter.status_AttackAir_Main_common().get_bool() {
             return 1.into();
         }
         else {
             fighter.sub_air_check_superleaf_fall_slowly();
-            
+            let is_stopping = fighter.global_table[globals::IS_STOPPING].get_bool();
+            if !is_stopping {
+                fighter.sub_attack_air_inherit_jump_aerial_motion_uniq_process_exec_fix_pos();
+            }
         }
+        //
     }
     if fighter.is_situation(*SITUATION_KIND_GROUND) {
-
+        fighter.change_status(FIGHTER_STATUS_KIND_LANDING.into(), false.into());
     }
     return 0.into();
 }
@@ -24,6 +28,7 @@ unsafe fn trail_special_lw_main(fighter: &mut L2CFighterCommon) -> L2CValue {
         // Taken from vanilla down air
         fighter.sub_attack_air_common(false.into());
         MotionModule::set_trans_move_speed_no_scale(fighter.module_accessor, true);
+        //
     }
     if fighter.is_situation(*SITUATION_KIND_GROUND) {
         fighter.change_status(FIGHTER_STATUS_KIND_LANDING.into(), false.into());
